@@ -45,17 +45,19 @@ Votre code de l'onglet « Données » (de `c1, c2, c3 = ...` jusqu'au nuage de p
 ```python
 c1, c2, c3 = st.columns(3)
 c1.metric("Relevés", len(df))
-c2.metric("Taux de panne", f"{df.failure.mean():.1%}")
+c2.metric("Taux de panne", f"{df.failure.mean() * 100:.1f} %")
 c3.metric("Température moyenne", f"{df.temperature_c.mean():.1f} °C")
 
 variable = st.selectbox("Variable", FEATURES)
 tranches = pd.cut(df[variable], bins=10)
-taux = df.groupby(tranches, observed=True).failure.mean()
-taux.index = [round(i.mid, 1) for i in taux.index]  # des nombres, pas du texte
+taux = df.groupby(tranches, observed=True)["failure"].mean()
+taux.index = taux.index.astype(str)
+st.subheader(f"Taux de panne par tranche de {variable}")
 st.bar_chart(taux)
 
-nuage = df.assign(panne=df.failure.map({0: "non", 1: "oui"}))
-st.scatter_chart(nuage, x="temperature_c", y="vibration_mm_s", color="panne")
+st.subheader("Température / vibration")
+points = df.assign(panne=df.failure.map({0: "non", 1: "oui"}))
+st.scatter_chart(points, x="temperature_c", y="vibration_mm_s", color="panne")
 ```
 
 | Indicateur | Valeur affichée |
@@ -108,7 +110,7 @@ Avec l'API lancée (`uvicorn maintai.api.main:app --reload --env-file .env`) :
 
 | Essai | Ce qu'affiche Streamlit |
 |---|---|
-| valeurs par défaut, bonne clé | Probabilité de panne : 95 % et ALERTE : au-dessus du seuil 0.3 |
+| valeurs par défaut, bonne clé | Probabilité de panne : 95 % et « ⚠️ ALERTE : risque de panne, prévoir une intervention. » |
 | valeurs par défaut, fausse clé | L'API a refusé la requête : Erreur 401 : Clé API absente ou invalide |
 | API arrêtée (Ctrl+C dans le terminal d'uvicorn) | API injoignable : vérifiez que uvicorn est lancé et l'URL. |
 
