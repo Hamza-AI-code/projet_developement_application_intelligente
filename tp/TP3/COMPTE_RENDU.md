@@ -130,7 +130,7 @@ CORS est une règle **du navigateur** : elle s'applique seulement quand du JavaS
 
 ## 6. Le rendu Git
 
-- Lien de la pull request : https://github.com/Hamza-AI-code/projet_developement_application_intelligente/pulls 
+- Lien de la pull request : https://github.com/Hamza-AI-code/projet_developement_application_intelligente/pull/2
 - Le tag `tp3` existe sur GitHub : oui (après la fusion : `git tag tp3`, `git push --tags`)
 - `git status` avant le commit : `.env`, `data/` ou `models/` apparaissaient-ils ? non
 
