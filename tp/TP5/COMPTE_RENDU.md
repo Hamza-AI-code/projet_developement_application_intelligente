@@ -179,9 +179,8 @@ See `docs/adr/004-choix-du-modele.md`: logistic regression, C=1.0, threshold 0.2
 
 ## 7. Le rendu Git
 
-- Pull request link: not available (no GitHub remote configured on this machine). Local commits: `95db2d2`
-  (MLflow + DVC v1) and `564f3c2` (data v2), then the report commit.
-- The `tp5` tag exists on GitHub: no (the tag exists locally; push it with `git push origin tp5` once the remote is set)
+- Pull request link: https://github.com/Hamza-AI-code/projet_developement_application_intelligente/pull/new/tp5 (branch `tp5`; files in `tp/TP5/`: COMPTE_RENDU.md, docs/adr/004-choix-du-modele.md, maintai/tracking.py)
+- The `tp5` tag exists on GitHub: yes
 - `git status` before the commit: `mlflow.db`, `mlruns/`, `data/sensors.csv` or `.dvc/cache` appeared: no
   (they are ignored by `.gitignore`, `data/.gitignore` and `.dvc/.gitignore`)
 
