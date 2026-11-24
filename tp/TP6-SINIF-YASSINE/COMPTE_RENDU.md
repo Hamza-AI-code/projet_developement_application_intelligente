@@ -75,9 +75,9 @@ mlruns/
 python -m pytest après le Dockerfile et le .dockerignore : 2 failed, 36 passed (restent compose et ui).
 
 Build	Durée	Taille de l'image (docker images)
-premier build	≈ 5 min (téléchargement de python:3.11-slim + pip install)	≈ 1 Go
-après une modification de maintai/predict.py	quelques secondes	identique
-Que signifie CACHED dans le journal du second build ? Docker a réutilisé la couche du build précédent au lieu de rejouer l'instruction : FROM, WORKDIR, COPY requirements-docker.txt et RUN pip install sont CACHED car rien n'a changé avant eux. Seul COPY maintai (le fichier modifié) et les instructions suivantes sont rejoués : d'où quelques secondes au lieu de 5 minutes.
+premier build	158 s (≈ 2 min 40 : téléchargement de python:3.11-slim + pip install)	1,13 Go (259 Mo de contenu)
+après une modification de maintai/predict.py	15 s	1,13 Go (identique)
+Que signifie CACHED dans le journal du second build ? Docker a réutilisé la couche du build précédent au lieu de rejouer l'instruction : FROM, WORKDIR, COPY requirements-docker.txt et RUN pip install sont CACHED car rien n'a changé avant eux. Seul COPY maintai (le fichier modifié) et les instructions suivantes sont rejoués : d'où 15 secondes au lieu de 158.
 
 4. Sprint 1 : lancer un conteneur
 Votre commande docker run :
@@ -86,7 +86,7 @@ docker run -d --name maintai-api -p 8000:8000 --env-file .env -v "%cd%\models:/a
 Essai	Réponse
 GET /health	200 · {"status":"ok","model_loaded":true}
 POST /v1/predict sans clé	401 · {"detail":"Clé API absente ou invalide"}
-POST /v1/predict avec la clé	200 · {"failure_probability":0.9475,"alert":true,"threshold":0.3,"model_version":"…"}
+POST /v1/predict avec la clé	200 · {"failure_probability":0.9475,"alert":true,"threshold":0.3,"model_version":"2026-11-24T17:14:55Z"}
 (relevé : temperature_c=72, vibration_mm_s=6, load_pct=85, runtime_hours=15000)
 
 Piège 1. Sans l'option -v ...models... : /health répond {"status":"ok","model_loaded":false} et /v1/predict (avec la clé) répond 503 Modèle non chargé : lancez python -m maintai.train puis redémarrez l'API. Pourquoi : models/ est exclu par .dockerignore, donc l'image ne contient pas le modèle. Dans le conteneur, MAINTAI_MODELS_DIR=/app/models pointe vers un dossier vide : Predictor.load lève FileNotFoundError, l'API démarre quand même mais sans modèle. C'est voulu : le modèle arrive au lancement, par le volume.
@@ -126,9 +126,9 @@ ui/app.py, barre latérale :
 url = st.text_input("URL de l'API", os.getenv("MAINTAI_API_URL", "http://localhost:8000"))
 Sortie de docker compose ps :
 
-NAME          IMAGE           COMMAND                  SERVICE   STATUS         PORTS
-tp6-api-1     maintai:0.4.0   "uvicorn maintai.api…"   api       Up 30 seconds  0.0.0.0:8000->8000/tcp
-tp6-ui-1      maintai:0.4.0   "python -m streamlit…"   ui        Up 30 seconds  0.0.0.0:8501->8501/tcp, 8000/tcp
+NAME        IMAGE           COMMAND                  SERVICE   CREATED          STATUS          PORTS
+tp6-api-1   maintai:0.4.0   "uvicorn maintai.api…"   api       11 seconds ago   Up 11 seconds   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+tp6-ui-1    maintai:0.4.0   "python -m streamlit…"   ui        10 seconds ago   Up 10 seconds   0.0.0.0:8501->8501/tcp, [::]:8501->8501/tcp
 Quelle URL affiche la barre latérale de l'interface ? D'où vient-elle ? http://api:8000. Elle vient de la variable d'environnement MAINTAI_API_URL, définie dans compose.yaml pour le service ui et lue par os.getenv dans ui/app.py. Hors Docker (variable absente), la valeur par défaut http://localhost:8000 reste en place. Avec la clé de .env, « Prédire » affiche 95 % et l'alerte.
 
 Résultat des deux commandes docker compose exec ui ... :
@@ -146,7 +146,7 @@ docker compose down arrête et supprime les deux conteneurs et le réseau créé
 
 Dernière ligne de python -m pytest à la fin du sprint 2 :
 
-=========== 38 passed, 4 warnings in 20.73s ===========
+38 passed, 6 warnings in 62.05s (0:01:02)
 6. Décision : l'ADR 005
 Dans docs/adr/005-image-docker.md. Le modèle n'est pas dans l'image : il arrive par un volume en lecture seule, pour pouvoir le ré-entraîner et le remplacer sans reconstruire l'image (au prix d'un -v à ne pas oublier, et d'un scikit-learn figé à 1.8.0). .dockerignore laisse dehors le secret (.env), le modèle, les données, les fichiers MLflow/DVC et tout ce qui est local au PC, pour une image légère, partageable et sans fuite.
 
