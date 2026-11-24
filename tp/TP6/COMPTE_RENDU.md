@@ -155,9 +155,9 @@ L'image `maintai:0.4.0` ne contient que Python 3.11, les bibliothèques en versi
 
 ## 8. Le rendu Git
 
-- Lien de la pull request : ⚠️ À COMPLÉTER
-- Le tag `tp6` existe sur GitHub : ⚠️ oui / non
-- `git status` avant le commit : `.env`, `models/` ou `data/*.csv` apparaissaient-ils ? non (ils sont dans `.gitignore`) ⚠️ à vérifier
+- Lien de la pull request : https://github.com/Hamza-AI-code/projet_developement_application_intelligente/pull/4
+- Le tag `tp6` existe sur GitHub : oui
+- `git status` avant le commit : `.env`, `models/` ou `data/*.csv` apparaissaient-ils ? non : seuls `Dockerfile`, `.dockerignore`, `COMPTE_RENDU.md` et `docs/adr/005-image-docker.md` ont été ajoutés (`.env`, `models/` et `data/*.csv` sont dans `.gitignore`)
 
 ## 9. Ce qui reste flou
 
