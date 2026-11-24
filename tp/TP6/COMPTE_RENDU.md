@@ -12,7 +12,19 @@
 Sortie de `docker run hello-world` (première ligne) et de `docker version` (lignes Client et Server) :
 
 ```
-⚠️ À COLLER : relancer `docker run hello-world` et `docker version`
+Hello from Docker!
+
+Client:
+ Version:           29.8.2
+ API version:       1.56
+ OS/Arch:           darwin/arm64
+ Context:           desktop-linux
+
+Server: Docker Desktop 4.94.0 (241994)
+ Engine:
+  Version:          29.8.2
+  API version:      1.56 (minimum version 1.40)
+  OS/Arch:          linux/arm64
 ```
 
 Dernière ligne de `python -m pytest` après la mise en place :
@@ -114,7 +126,9 @@ services:
 Sortie de `docker compose ps` :
 
 ```
-⚠️ À COLLER : relancer `docker compose up -d` puis `docker compose ps`
+NAME        IMAGE           COMMAND                  SERVICE   CREATED          STATUS          PORTS
+tp6-api-1   maintai:0.4.0   "uvicorn maintai.api…"   api       21 minutes ago   Up 21 minutes   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+tp6-ui-1    maintai:0.4.0   "python -m streamlit…"   ui        21 minutes ago   Up 21 minutes   0.0.0.0:8501->8501/tcp, [::]:8501->8501/tcp
 ```
 
 Quelle URL affiche la barre latérale de l'interface ? D'où vient-elle ?
@@ -124,9 +138,12 @@ La barre latérale affiche `http://api:8000`. Cette valeur vient de la variable 
 Résultat des deux commandes `docker compose exec ui ...` (avec `api` puis avec `localhost`). Pourquoi la seconde échoue-t-elle ?
 
 ```
-⚠️ À COLLER : sortie de
-docker compose exec ui python -c "import httpx; print(httpx.get('http://api:8000/health').json())"
-docker compose exec ui python -c "import httpx; print(httpx.get('http://localhost:8000/health').json())"
+$ docker compose exec ui python -c "import httpx; print(httpx.get('http://api:8000/health').json())"
+{'status': 'ok', 'model_loaded': True}
+
+$ docker compose exec ui python -c "import httpx; print(httpx.get('http://localhost:8000/health').json())"
+  ...
+httpx.ConnectError: [Errno 111] Connection refused
 ```
 
 La première réussit : Compose crée un réseau commun où chaque service est joignable par son nom, et `api` désigne le conteneur de l'API. La seconde échoue (`ConnectError`), car dans le conteneur `ui`, `localhost` désigne le conteneur `ui` lui-même, où rien n'écoute sur le port 8000. Le port publié `8000:8000` concerne le PC, pas les autres conteneurs.
@@ -161,4 +178,6 @@ L'image `maintai:0.4.0` ne contient que Python 3.11, les bibliothèques en versi
 
 ## 9. Ce qui reste flou
 
-…
+- La différence entre `localhost` sur le PC et `localhost` dans un conteneur : j'ai compris avec le piège 2 et le test `exec`, mais je veux revoir comment Docker relie le port publié à l'interface réseau du conteneur.
+- Comment livrer le modèle en production sans volume local : registre d'images, stockage distant (DVC, MLflow) ou une image dédiée au modèle ?
+- Pourquoi l'image pèse 845 MB alors qu'on part de `python:3.11-slim` : quelles bibliothèques prennent le plus de place, et faut-il séparer l'image de l'API et celle de l'interface ?
